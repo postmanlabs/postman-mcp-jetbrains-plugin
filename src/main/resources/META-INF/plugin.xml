@@ -2,7 +2,7 @@
     <id>com.postman.mcp-server</id>
     <name>Postman MCP Server</name>
     <version>1.0.0</version>
-    <vendor email="support@postman.com" url="https://postman.com">Postman</vendor>
+    <vendor email="support@postman.com" url="https://plugins.jetbrains.com/organization/postman">Postman</vendor>
 
     <description><![CDATA[
         <p>Connect JetBrains AI Assistant to your Postman workspace via the
