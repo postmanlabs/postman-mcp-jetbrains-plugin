@@ -45,11 +45,6 @@ The plugin writes the MCP server config to JetBrains AI Assistant's `mcp.json` s
 
 The plugin ZIP is output to `build/distributions/`.
 
-## Publishing (Postman team)
-
-1. Set environment variables: `CERTIFICATE_CHAIN`, `PRIVATE_KEY`, `PRIVATE_KEY_PASSWORD`, `PUBLISH_TOKEN`
-2. Run: `./gradlew signPlugin publishPlugin`
-
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE)
