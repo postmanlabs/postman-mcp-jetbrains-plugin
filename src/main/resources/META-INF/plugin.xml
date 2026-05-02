@@ -1,0 +1,68 @@
+<idea-plugin>
+    <id>com.postman.mcp-server</id>
+    <name>Postman MCP Server</name>
+    <version>1.0.0</version>
+    <vendor email="support@postman.com" url="https://postman.com">Postman</vendor>
+
+    <description><![CDATA[
+        <p>Connect JetBrains AI Assistant to your Postman workspace via the
+        <a href="https://github.com/postmanlabs/postman-mcp-server">Postman MCP Server</a>.</p>
+
+        <p>Once configured, JetBrains AI can:</p>
+        <ul>
+            <li>Manage Postman collections, workspaces, and environments</li>
+            <li>Run API tests and generate client code</li>
+            <li>Search public and private API definitions</li>
+            <li>Create and update Postman specs from code</li>
+        </ul>
+
+        <p><b>Requirements:</b> IntelliJ IDEA 2025.1 or later with AI Assistant enabled.</p>
+
+        <p>After installing the plugin, go to
+        <b>Settings → Tools → Postman MCP Server</b> to configure your connection.</p>
+    ]]></description>
+
+    <change-notes><![CDATA[
+        <b>1.0.0</b>
+        <ul>
+            <li>Initial release — configure Postman MCP Server connection from JetBrains AI Assistant</li>
+        </ul>
+    ]]></change-notes>
+
+    <idea-version since-build="251"/>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService
+            serviceImplementation="com.postman.mcp.PostmanMcpSettings"/>
+        <applicationService
+            serviceImplementation="com.postman.mcp.PostmanMcpService"/>
+        <applicationConfigurable
+            parentId="tools"
+            id="com.postman.mcp.configurable"
+            displayName="Postman MCP Server"
+            instance="com.postman.mcp.PostmanMcpConfigurable"/>
+    </extensions>
+
+    <applicationListeners>
+        <listener
+            class="com.postman.mcp.PostmanMcpStartupListener"
+            topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </applicationListeners>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="Postman MCP Server"
+                           displayType="BALLOON"
+                           toolWindowId="Event Log"/>
+    </extensions>
+
+    <actions>
+        <action id="com.postman.mcp.SetupAction"
+                class="com.postman.mcp.PostmanMcpSetupAction"
+                text="Configure Postman MCP Server"
+                description="Write Postman MCP Server config to JetBrains AI Assistant settings">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>
