@@ -3,7 +3,7 @@ import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.0.21"
-    id("org.jetbrains.intellij.platform") version "2.2.1"
+    id("org.jetbrains.intellij.platform") version "2.16.0"
 }
 
 group = "com.postman"
@@ -30,6 +30,11 @@ intellijPlatform {
         ideaVersion {
             sinceBuild = "251"
             untilBuild = provider { null }
+        }
+    }
+    pluginVerification {
+        ides {
+            recommended()
         }
     }
     signing {
