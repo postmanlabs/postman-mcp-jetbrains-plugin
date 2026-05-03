@@ -10,8 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: write
 
     steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h
+
       - uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -26,6 +33,9 @@ jobs:
       - name: Build plugin
         run: ./gradlew buildPlugin
 
+      - name: Verify plugin
+        run: ./gradlew verifyPlugin
+
       - name: Sign plugin
         run: ./gradlew signPlugin
         env:
@@ -38,8 +48,17 @@ jobs:
         env:
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
 
+      - name: Publish to GitHub Packages
+        run: ./gradlew publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+
       - name: Create GitHub Release
-        uses: actions/upload-artifact@v4
-        with:
-          name: postman-mcp-server-plugin-${{ github.ref_name }}
-          path: build/distributions/*.zip
+        run: |
+          gh release create ${{ github.ref_name }} \
+            build/distributions/*.zip \
+            --title "Release ${{ github.ref_name }}" \
+            --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
