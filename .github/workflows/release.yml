@@ -49,7 +49,7 @@ jobs:
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
 
       - name: Publish to GitHub Packages
-        run: ./gradlew publish
+        run: ./gradlew publish -PmavenPublishVersion=${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}

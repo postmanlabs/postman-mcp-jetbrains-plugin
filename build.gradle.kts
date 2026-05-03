@@ -63,7 +63,8 @@ publishing {
         create<MavenPublication>("pluginZip") {
             groupId = project.group.toString()
             artifactId = "postman-mcp-server-plugin"
-            version = project.version.toString()
+            version = providers.gradleProperty("mavenPublishVersion")
+                .getOrElse("${project.version}-SNAPSHOT")
             artifact(tasks.named("buildPlugin"))
         }
     }
