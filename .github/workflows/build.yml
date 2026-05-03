@@ -9,6 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Free disk space
@@ -39,3 +42,10 @@ jobs:
         with:
           name: postman-mcp-server-plugin
           path: build/distributions/*.zip
+
+      - name: Publish to GitHub Packages
+        if: github.event_name == 'push'
+        run: ./gradlew publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}

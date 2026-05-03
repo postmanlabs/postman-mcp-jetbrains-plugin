@@ -4,6 +4,7 @@ plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.0.21"
     id("org.jetbrains.intellij.platform") version "2.16.0"
+    id("maven-publish")
 }
 
 group = "com.postman"
@@ -54,5 +55,26 @@ kotlin {
 tasks {
     test {
         useJUnitPlatform()
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("pluginZip") {
+            groupId = project.group.toString()
+            artifactId = "postman-mcp-server-plugin"
+            version = project.version.toString()
+            artifact(tasks.named("buildPlugin"))
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/postmanlabs/postman-mcp-jetbrains-plugin")
+            credentials {
+                username = providers.environmentVariable("GITHUB_ACTOR").getOrElse("")
+                password = providers.environmentVariable("GITHUB_TOKEN").getOrElse("")
+            }
+        }
     }
 }
