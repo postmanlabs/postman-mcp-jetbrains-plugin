@@ -19,7 +19,6 @@ repositories {
 dependencies {
     intellijPlatform {
         intellijIdeaCommunity("2025.1")
-        bundledPlugin("com.intellij.modules.platform")
         testFramework(TestFrameworkType.Platform)
     }
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.3")
@@ -44,7 +43,7 @@ intellijPlatform {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 tasks {
