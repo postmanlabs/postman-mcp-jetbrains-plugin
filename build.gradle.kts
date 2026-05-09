@@ -1,5 +1,3 @@
-import org.jetbrains.intellij.platform.gradle.TestFrameworkType
-
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.0.21"
@@ -8,7 +6,7 @@ plugins {
 }
 
 group = "com.postman"
-version = "1.0.0"
+version = "0.1.0"
 
 repositories {
     mavenCentral()
@@ -20,10 +18,12 @@ repositories {
 dependencies {
     intellijPlatform {
         intellijIdeaCommunity("2025.1")
-        testFramework(TestFrameworkType.Platform)
     }
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.3")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.3")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.3")
+    testRuntimeOnly("junit:junit:4.13.2")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.3.1")
 }
 
 intellijPlatform {
