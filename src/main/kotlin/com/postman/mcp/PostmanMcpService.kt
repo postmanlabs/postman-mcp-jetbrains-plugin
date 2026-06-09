@@ -25,8 +25,19 @@ class PostmanMcpService {
         )
     }
 
+    /**
+     * Writes the MCP config using whatever Node + server install is currently cached on disk.
+     * Returns failure if the cache is missing — call [applyConfigWithBootstrap] (which downloads)
+     * before this on first setup.
+     */
     fun applyConfig(): Result<Unit> {
-        val result = McpConfigWriter.applyConfig(getApiKey())
+        val paths = BundledRuntime.cachedPaths()
+            ?: return Result.failure(IllegalStateException("Bundled runtime is not installed yet"))
+        return applyConfig(paths)
+    }
+
+    internal fun applyConfig(paths: BundledRuntime.Paths): Result<Unit> {
+        val result = McpConfigWriter.applyConfig(getApiKey(), paths.node, paths.serverEntry)
         result.onSuccess {
             log.info("Postman MCP config written")
             // Notify the IDE's VFS about the file change so the MCP framework picks it up

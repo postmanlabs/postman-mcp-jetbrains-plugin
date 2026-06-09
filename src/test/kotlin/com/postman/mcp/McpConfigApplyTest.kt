@@ -9,7 +9,7 @@ import java.nio.file.Path
 
 /**
  * Tests the MCP config writing logic.
- * Always writes the minimal stdio (npx) server — no user-configurable transport.
+ * Always writes a stdio entry pointing at the bundled Node + pre-installed MCP server.
  */
 class McpConfigApplyTest {
 
@@ -28,15 +28,26 @@ class McpConfigApplyTest {
         System.clearProperty("com.postman.mcp.test.configFile")
     }
 
-    // ── npx entry ─────────────────────────────────────────────────────────────
+    // ── stdio entry ───────────────────────────────────────────────────────────
 
     @Test
-    fun `writes npx command with postman-mcp-server package`() {
+    fun `writes node command pointing at the bundled binary and server entry`() {
         McpConfigWriter.applyConfig("my-api-key").getOrThrow()
 
         val json = configFile.readText()
-        assertContains(json, "\"npx\"")
-        assertContains(json, "@postman/postman-mcp-server@latest")
+        assertContains(json, FAKE_NODE.absolutePath)
+        assertContains(json, FAKE_SERVER.absolutePath)
+    }
+
+    @Test
+    fun `does not write npx anymore`() {
+        McpConfigWriter.applyConfig("key").getOrThrow()
+
+        val json = configFile.readText()
+        assert(!json.contains("\"npx\"")) { "Expected no npx reference in: $json" }
+        assert(!json.contains("@postman/postman-mcp-server@latest")) {
+            "Expected no @latest reference in: $json"
+        }
     }
 
     @Test

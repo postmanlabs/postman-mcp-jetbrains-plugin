@@ -48,14 +48,15 @@ class PostmanMcpQuickSetupTest {
     }
 
     @Test
-    fun `connect uses stdio npx transport`() {
+    fun `connect uses bundled node + pinned server entry as the stdio command`() {
         val state = PostmanMcpSettings.State(configured = false)
 
         connect(state, "key").getOrThrow()
 
         val json = configFile.readText()
-        assertContains(json, "\"npx\"")
-        assertContains(json, "@postman/postman-mcp-server@latest")
+        assertContains(json, FAKE_NODE.absolutePath)
+        assertContains(json, FAKE_SERVER.absolutePath)
+        assert(!json.contains("\"npx\"")) { "Expected no npx reference in: $json" }
     }
 
     @Test
@@ -164,7 +165,7 @@ class PostmanMcpQuickSetupTest {
         val json = configFile.readText()
         assertContains(json, "\"mcpServers\"")
         assertContains(json, "\"postman\"")
-        assertContains(json, "npx")
+        assertContains(json, FAKE_NODE.absolutePath)
         assertContains(json, "full-flow-key")
         assert(state.configured)
     }

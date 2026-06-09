@@ -6,15 +6,18 @@ import java.io.File
  * Pure Kotlin object that handles all MCP config file reading and writing.
  * Has no IntelliJ platform dependencies so it can be tested without a running IDE.
  *
- * Always writes the minimal stdio server (npx @postman/postman-mcp-server@latest).
+ * Writes a stdio entry that points at the plugin's bundled Node and pre-installed Postman
+ * MCP Server (see [BundledRuntime]) — no `npx`, no network at MCP launch time.
  */
 internal object McpConfigWriter {
 
     fun applyConfig(
         apiKey: String,
+        nodeBinary: File,
+        serverEntry: File,
         targets: List<McpAgentTarget> = McpAgentTarget.ALL,
     ): Result<Unit> = runCatching {
-        val entry = buildEntry(apiKey)
+        val entry = buildEntry(apiKey, nodeBinary, serverEntry)
         for (target in targets) {
             val configFile = target.getConfigFile()
             val existing = readExistingConfig(configFile)
@@ -40,9 +43,11 @@ internal object McpConfigWriter {
         }
     }
 
-    internal fun buildEntry(apiKey: String): Map<String, Any> {
-        val args = listOf("-y", "@postman/postman-mcp-server@latest")
-        val entry = mutableMapOf<String, Any>("command" to "npx", "args" to args)
+    internal fun buildEntry(apiKey: String, nodeBinary: File, serverEntry: File): Map<String, Any> {
+        val entry = mutableMapOf<String, Any>(
+            "command" to nodeBinary.absolutePath,
+            "args" to listOf(serverEntry.absolutePath),
+        )
         if (apiKey.isNotBlank()) entry["env"] = mapOf("POSTMAN_API_KEY" to apiKey)
         return entry
     }
