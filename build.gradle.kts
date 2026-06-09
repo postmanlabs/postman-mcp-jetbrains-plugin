@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.postman"
-version = "0.1.0"
+version = providers.gradleProperty("pluginVersion").getOrElse("0.1.0")
 
 repositories {
     mavenCentral()
@@ -45,6 +45,7 @@ intellijPlatform {
     }
     publishing {
         token = providers.environmentVariable("PUBLISH_TOKEN")
+        channels = listOf(if (version.toString().contains("-")) "beta" else "default")
     }
 }
 

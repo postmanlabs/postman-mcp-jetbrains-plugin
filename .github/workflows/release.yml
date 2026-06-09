@@ -11,6 +11,11 @@ jobs:
     permissions:
       contents: write
       packages: write
+    env:
+      CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
+      PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+      PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
+      PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
 
     steps:
       - name: Free disk space
@@ -29,26 +34,23 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Derive plugin version from tag
+        run: echo "PLUGIN_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
       - name: Build plugin
-        run: ./gradlew buildPlugin
+        run: ./gradlew buildPlugin -PpluginVersion=$PLUGIN_VERSION
 
       - name: Verify plugin
-        run: ./gradlew verifyPlugin
+        run: ./gradlew verifyPlugin -PpluginVersion=$PLUGIN_VERSION
 
       - name: Sign plugin
-        run: ./gradlew signPlugin
-        env:
-          CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-          PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
+        run: ./gradlew signPlugin -PpluginVersion=$PLUGIN_VERSION
 
       - name: Publish to JetBrains Marketplace
-        run: ./gradlew publishPlugin
-        env:
-          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+        run: ./gradlew publishPlugin -PpluginVersion=$PLUGIN_VERSION
 
       - name: Publish to GitHub Packages
-        run: ./gradlew publish -PmavenPublishVersion=${{ github.ref_name }}
+        run: ./gradlew publish -PpluginVersion=$PLUGIN_VERSION -PmavenPublishVersion=$PLUGIN_VERSION
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
@@ -58,6 +60,7 @@ jobs:
           gh release create ${{ github.ref_name }} \
             build/distributions/*.zip \
             --title "Release ${{ github.ref_name }}" \
-            --generate-notes
+            --generate-notes \
+            $([[ "$PLUGIN_VERSION" == *-* ]] && echo --prerelease)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
