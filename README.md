@@ -1,10 +1,10 @@
 # Postman MCP Server — JetBrains Plugin
 
-Connect JetBrains AI Assistant to your Postman workspace via the [Postman MCP Server](https://github.com/postmanlabs/postman-mcp-server).
+Connect any AI agent in your JetBrains IDE to your Postman workspace via the [Postman MCP Server](https://github.com/postmanlabs/postman-mcp-server).
 
-## What it does
+A single configuration covers every JetBrains AI agent that reads MCP — AI Assistant, Junie, Codex, Claude, GitHub Copilot for JetBrains, and any future addition — because they all share `~/.ai/mcp/mcp.json`.
 
-After installing and configuring the plugin, JetBrains AI Assistant can:
+## What your AI agent can do once connected
 
 - Manage Postman collections, workspaces, and environments
 - Run API tests and generate client code
@@ -13,29 +13,25 @@ After installing and configuring the plugin, JetBrains AI Assistant can:
 
 ## Requirements
 
-- IntelliJ IDEA 2025.1 or later
-- JetBrains AI Assistant plugin enabled
-- Node.js (for local stdio mode only)
+- IntelliJ IDEA (or any JetBrains IDE) 2025.1 or later
+- At least one supported AI agent plugin installed (AI Assistant, Junie, GitHub Copilot, …)
+- [Node.js](https://nodejs.org/) on your `PATH` — the MCP server runs locally via `npx`
 
 ## Installation
 
-Install from the [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/com.postman.mcp-server).
+Install from the [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/31578-postman-mcp-server).
 
-## Configuration
+## First-time setup
 
-1. Go to **Settings → Tools → Postman MCP Server**
-2. Choose a connection type:
-   - **Remote OAuth** — no API key needed, US region only (recommended)
-   - **Remote API key** — use your [Postman API key](https://postman.postman.co/settings/me/api-keys), supports US and EU
-   - **Local stdio** — runs `npx @postman/postman-mcp-server@latest` locally
-3. Choose a tool set:
-   - **Minimal** — essential tools, fastest performance (default)
-   - **Full** — all 100+ Postman tools
-   - **Code** — API search and code generation tools
-4. Click **Write MCP config now** (or **Apply**)
-5. Restart your IDE to activate
+1. Open any project after installing the plugin.
+2. A **Connect to Postman** dialog appears. Paste your [Postman API key](https://go.postman.co/settings/me/api-keys) and click **Connect**.
+3. Accept the IDE's prompt to enable the MCP server when it appears.
 
-The plugin writes the MCP server config to JetBrains AI Assistant's `mcp.json` settings file.
+That's it — no manual config files, no restart. The plugin writes the stdio MCP entry (`npx -y @postman/postman-mcp-server@latest`) to `~/.ai/mcp/mcp.json`, and on every IDE startup it re-applies the entry so the file stays current.
+
+## Updating your API key
+
+**Tools → Update Postman API Key**
 
 ## Building from source
 
