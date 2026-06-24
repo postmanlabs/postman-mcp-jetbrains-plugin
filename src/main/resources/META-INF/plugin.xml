@@ -13,7 +13,8 @@
         prompt that appears, then accept the IDE's prompt to enable the MCP server.
         That's it — no manual config files, no restarts.</p>
 
-        <p>To update your API key later, use <b>Tools → Update Postman API Key</b>.</p>
+        <p>To update your API key later, use <b>Tools → Update Postman API Key</b> or edit it in
+        <b>Settings → Tools → Postman MCP Server</b>.</p>
 
         <p>Supported AI agents (all share the same MCP config automatically):</p>
         <ul>
@@ -49,6 +50,10 @@
         <applicationService serviceImplementation="com.postman.mcp.PostmanMcpSettings"/>
         <applicationService serviceImplementation="com.postman.mcp.PostmanMcpService"/>
         <postStartupActivity implementation="com.postman.mcp.PostmanMcpStartupActivity"/>
+        <applicationConfigurable parentId="tools"
+                                 id="com.postman.mcp.settings"
+                                 displayName="Postman MCP Server"
+                                 instance="com.postman.mcp.PostmanMcpConfigurable"/>
         <notificationGroup id="Postman MCP Server"
                            displayType="BALLOON"
                            toolWindowId="Event Log"/>

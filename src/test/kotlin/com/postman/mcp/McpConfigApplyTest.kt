@@ -114,6 +114,56 @@ class McpConfigApplyTest {
         }
     }
 
+    // ── Deep merge of user edits ────────────────────────────────────────────────
+
+    @Test
+    fun `deep merge preserves user-added args after the server entry`() {
+        configFile.parentFile?.mkdirs()
+        configFile.writeText(
+            """{"mcpServers":{"postman":{"command":"/stale/node","args":["${FAKE_SERVER.absolutePath}","--full"],"env":{"POSTMAN_API_KEY":"k"}}}}"""
+        )
+
+        McpConfigWriter.applyConfig("k").getOrThrow()
+
+        val json = configFile.readText()
+        assertContains(json, "--full")
+        // command is refreshed to the current bundled node, not the stale one.
+        assertContains(json, FAKE_NODE.absolutePath)
+        assert(!json.contains("/stale/node")) { "Expected stale command refreshed: $json" }
+    }
+
+    @Test
+    fun `deep merge preserves user-added env vars and overwrites the api key`() {
+        configFile.parentFile?.mkdirs()
+        configFile.writeText(
+            """{"mcpServers":{"postman":{"command":"${FAKE_NODE.absolutePath}","args":["${FAKE_SERVER.absolutePath}"],"env":{"POSTMAN_API_KEY":"old","POSTMAN_API_BASE_URL":"https://api.eu.postman.com"}}}}"""
+        )
+
+        McpConfigWriter.applyConfig("new").getOrThrow()
+
+        val json = configFile.readText()
+        assertContains(json, "POSTMAN_API_BASE_URL")
+        assertContains(json, "https://api.eu.postman.com")
+        assertContains(json, "new")
+        assert(!json.contains("\"old\"")) { "Expected api key overwritten: $json" }
+    }
+
+    @Test
+    fun `legacy npx entry is replaced wholesale, not merged`() {
+        configFile.parentFile?.mkdirs()
+        configFile.writeText(
+            """{"mcpServers":{"postman":{"command":"npx","args":["-y","@postman/postman-mcp-server@latest"]}}}"""
+        )
+
+        McpConfigWriter.applyConfig("k").getOrThrow()
+
+        val json = configFile.readText()
+        assert(!json.contains("npx")) { "Expected legacy npx command replaced: $json" }
+        assert(!json.contains("@latest")) { "Expected legacy npx args dropped: $json" }
+        assertContains(json, FAKE_NODE.absolutePath)
+        assertContains(json, FAKE_SERVER.absolutePath)
+    }
+
     @Test
     fun `creates parent directories when they do not exist`() {
         val nestedFile = tmpDir.resolve("deep/nested/mcp.json").toFile()

@@ -4,3 +4,6 @@ build/
 *.iml
 out/
 .intellijPlatform/
+
+# Kotlin incremental compilation cache
+.kotlin/

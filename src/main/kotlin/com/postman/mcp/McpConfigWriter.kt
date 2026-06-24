@@ -70,9 +70,45 @@ internal object McpConfigWriter {
     ): MutableMap<String, Any> {
         val servers = existing.getOrPut(rootKey) { mutableMapOf<String, Any>() }
             as? MutableMap<String, Any> ?: mutableMapOf()
-        servers[key] = entry
+        val previous = servers[key] as? Map<String, Any>
+        servers[key] = mergeEntry(previous, entry)
         existing[rootKey] = servers
         return existing
+    }
+
+    /**
+     * Deep-merges the freshly built [fresh] entry into the user's [existing] postman entry so that
+     * hand edits survive each [applyConfig] (which runs on every IDE startup):
+     *
+     *  - `command` and the server-entry arg are always refreshed to the plugin's current bundled
+     *    paths (they move when Node / the server version is bumped).
+     *  - Extra `args` the user appended after the server entry (e.g. `--full`) are preserved.
+     *  - Extra `env` vars (e.g. a region base URL) are preserved; `POSTMAN_API_KEY` is always taken
+     *    from [fresh] so the plugin stays the source of truth for the key.
+     *
+     * If [existing] is null or not a bundled-shaped stdio entry (e.g. a legacy `npx` command or a
+     * remote `url` entry from an older plugin version), it is replaced wholesale — there is nothing
+     * worth preserving and merging would carry stale args forward.
+     */
+    @Suppress("UNCHECKED_CAST")
+    internal fun mergeEntry(existing: Map<String, Any>?, fresh: Map<String, Any>): Map<String, Any> {
+        if (existing == null) return fresh
+        val existingArgs = (existing["args"] as? List<*>)?.map { it.toString() } ?: emptyList()
+        val command = existing["command"] as? String
+        val isBundledShaped = command != null && command != "npx" && existing["url"] == null &&
+            existingArgs.firstOrNull()?.endsWith(".js") == true
+        if (!isBundledShaped) return fresh
+
+        val merged = LinkedHashMap<String, Any>(existing)
+        merged["command"] = fresh.getValue("command")
+        val serverEntry = (fresh.getValue("args") as List<*>).first() as String
+        merged["args"] = listOf(serverEntry) + existingArgs.drop(1)
+
+        val mergedEnv = LinkedHashMap<String, Any>()
+        (existing["env"] as? Map<*, *>)?.forEach { (k, v) -> mergedEnv[k.toString()] = v as Any }
+        (fresh["env"] as? Map<*, *>)?.forEach { (k, v) -> mergedEnv[k.toString()] = v as Any }
+        if (mergedEnv.isEmpty()) merged.remove("env") else merged["env"] = mergedEnv
+        return merged
     }
 
     private fun writeConfig(file: File, json: String) {
