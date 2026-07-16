@@ -9,3 +9,7 @@ internal val FAKE_SERVER: File = File("/fake/server/index.js")
 /** Convenience for tests that don't care about the bundled-runtime paths. */
 internal fun McpConfigWriter.applyConfig(apiKey: String): Result<Unit> =
     applyConfig(apiKey, FAKE_NODE, FAKE_SERVER)
+
+/** As above, with explicit telemetry consent. */
+internal fun McpConfigWriter.applyConfig(apiKey: String, telemetryEnabled: Boolean): Result<Unit> =
+    applyConfig(apiKey, FAKE_NODE, FAKE_SERVER, telemetryEnabled)

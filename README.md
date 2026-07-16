@@ -15,7 +15,8 @@ A single configuration covers every JetBrains AI agent that reads MCP — AI Ass
 
 - IntelliJ IDEA (or any JetBrains IDE) 2025.1 or later
 - At least one supported AI agent plugin installed (AI Assistant, Junie, GitHub Copilot, …)
-- [Node.js](https://nodejs.org/) on your `PATH` — the MCP server runs locally via `npx`
+
+No Node.js install required — the plugin bundles a pinned Node runtime and the Postman MCP Server on first setup.
 
 ## Installation
 
@@ -25,7 +26,8 @@ Install from the [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/31
 
 1. Open any project after installing the plugin.
 2. A **Connect to Postman** dialog appears. Paste your [Postman API key](https://go.postman.co/settings/me/api-keys) and click **Connect**.
-3. Accept the IDE's prompt to enable the MCP server when it appears.
+3. A telemetry consent dialog appears — **Accept** to help Postman improve the product and provide better support, or **Decline**. It's opt-in and off unless you accept; you can change it later under **Settings → Tools → Postman MCP Server**.
+4. Accept the IDE's prompt to enable the MCP server when it appears.
 
 That's it — no manual config files, no restart. The plugin writes the stdio MCP entry (`npx -y @postman/postman-mcp-server@latest`) to `~/.ai/mcp/mcp.json`, and on every IDE startup it re-applies the entry so the file stays current.
 

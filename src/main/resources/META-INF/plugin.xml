@@ -36,9 +36,9 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <b>0.1.0</b>
+        <b>0.3.0</b>
         <ul>
-            <li>Initial release — configure Postman MCP Server for any installed AI agent (JetBrains AI Assistant, GitHub Copilot)</li>
+            <li>Added an opt-in telemetry consent checkbox (off by default) to the Connect dialog and Settings page. When enabled, the local stdio config carries the telemetry flag; the remote path is never affected.</li>
         </ul>
     ]]></change-notes>
 

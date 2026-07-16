@@ -37,7 +37,8 @@ class PostmanMcpService {
     }
 
     internal fun applyConfig(paths: BundledRuntime.Paths): Result<Unit> {
-        val result = McpConfigWriter.applyConfig(getApiKey(), paths.node, paths.serverEntry)
+        val telemetryEnabled = PostmanMcpSettings.getInstance().state.telemetryEnabled
+        val result = McpConfigWriter.applyConfig(getApiKey(), paths.node, paths.serverEntry, telemetryEnabled)
         result.onSuccess {
             log.info("Postman MCP config written")
             // Notify the IDE's VFS about the file change so the MCP framework picks it up

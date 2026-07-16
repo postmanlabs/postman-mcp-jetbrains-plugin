@@ -11,13 +11,21 @@ import java.io.File
  */
 internal object McpConfigWriter {
 
+    /**
+     * Env var the local stdio server reads to enable opt-in usage telemetry (see PSTAPI-1497).
+     * Off by default; only written when the user explicitly consents. Interpreted case-insensitively
+     * by the server's `parseTelemetryFlag()`, so we write the canonical lowercase `"true"`.
+     */
+    const val TELEMETRY_ENV_VAR = "POSTMAN_MCP_TELEMETRY"
+
     fun applyConfig(
         apiKey: String,
         nodeBinary: File,
         serverEntry: File,
+        telemetryEnabled: Boolean = false,
         targets: List<McpAgentTarget> = McpAgentTarget.ALL,
     ): Result<Unit> = runCatching {
-        val entry = buildEntry(apiKey, nodeBinary, serverEntry)
+        val entry = buildEntry(apiKey, nodeBinary, serverEntry, telemetryEnabled)
         for (target in targets) {
             val configFile = target.getConfigFile()
             val existing = readExistingConfig(configFile)
@@ -43,12 +51,20 @@ internal object McpConfigWriter {
         }
     }
 
-    internal fun buildEntry(apiKey: String, nodeBinary: File, serverEntry: File): Map<String, Any> {
+    internal fun buildEntry(
+        apiKey: String,
+        nodeBinary: File,
+        serverEntry: File,
+        telemetryEnabled: Boolean = false,
+    ): Map<String, Any> {
         val entry = mutableMapOf<String, Any>(
             "command" to nodeBinary.absolutePath,
             "args" to listOf(serverEntry.absolutePath),
         )
-        if (apiKey.isNotBlank()) entry["env"] = mapOf("POSTMAN_API_KEY" to apiKey)
+        val env = LinkedHashMap<String, Any>()
+        if (apiKey.isNotBlank()) env["POSTMAN_API_KEY"] = apiKey
+        if (telemetryEnabled) env[TELEMETRY_ENV_VAR] = "true"
+        if (env.isNotEmpty()) entry["env"] = env
         return entry
     }
 
@@ -107,6 +123,11 @@ internal object McpConfigWriter {
         val mergedEnv = LinkedHashMap<String, Any>()
         (existing["env"] as? Map<*, *>)?.forEach { (k, v) -> mergedEnv[k.toString()] = v as Any }
         (fresh["env"] as? Map<*, *>)?.forEach { (k, v) -> mergedEnv[k.toString()] = v as Any }
+        // Telemetry is plugin-owned like POSTMAN_API_KEY: when the user opts out, [fresh] omits the
+        // var, so we must drop any value a prior opted-in apply wrote rather than preserve it.
+        if ((fresh["env"] as? Map<*, *>)?.containsKey(TELEMETRY_ENV_VAR) != true) {
+            mergedEnv.remove(TELEMETRY_ENV_VAR)
+        }
         if (mergedEnv.isEmpty()) merged.remove("env") else merged["env"] = mergedEnv
         return merged
     }
