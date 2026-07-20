@@ -10,7 +10,11 @@ import com.intellij.openapi.components.*
 @Service(Service.Level.APP)
 class PostmanMcpSettings : PersistentStateComponent<PostmanMcpSettings.State> {
 
-    data class State(var configured: Boolean = false)
+    data class State(
+        var configured: Boolean = false,
+        /** Opt-in usage telemetry consent (PSTAPI-1497). Off by default; set only on explicit consent. */
+        var telemetryEnabled: Boolean = false,
+    )
 
     private var myState = State()
 

@@ -2,6 +2,7 @@ package com.postman.mcp
 
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.options.Configurable
+import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBPasswordField
 import com.intellij.ui.dsl.builder.COLUMNS_LARGE
 import com.intellij.ui.dsl.builder.columns
@@ -22,7 +23,12 @@ import javax.swing.JComponent
 class PostmanMcpConfigurable : Configurable {
 
     private val service get() = PostmanMcpService.getInstance()
+    private val settings get() = PostmanMcpSettings.getInstance()
     private val apiKeyField = JBPasswordField()
+    // Opt-in telemetry consent (PSTAPI-1507): unticked by default.
+    private val telemetryCheckBox = JBCheckBox(
+        "Enable telemetry to help Postman improve the product and provide better support."
+    )
 
     override fun getDisplayName(): String = "Postman MCP Server"
 
@@ -37,6 +43,9 @@ class PostmanMcpConfigurable : Configurable {
             cell(apiKeyField).columns(COLUMNS_LARGE)
         }
         row {
+            cell(telemetryCheckBox)
+        }
+        row {
             link("Get your API key →") {
                 BrowserUtil.browse("https://go.postman.co/settings/me/api-keys")
             }
@@ -44,22 +53,26 @@ class PostmanMcpConfigurable : Configurable {
     }.also { reset() }
 
     override fun isModified(): Boolean =
-        String(apiKeyField.password).trim() != service.getApiKey()
+        String(apiKeyField.password).trim() != service.getApiKey() ||
+            telemetryCheckBox.isSelected != settings.state.telemetryEnabled
 
     override fun apply() {
         val newKey = String(apiKeyField.password).trim()
         service.setApiKey(newKey)
+        settings.state.telemetryEnabled = telemetryCheckBox.isSelected
         if (newKey.isNotBlank()) {
-            PostmanMcpSettings.getInstance().state.configured = true
-            // Rewrite the config so POSTMAN_API_KEY reflects the new key. cachedPaths() is present
-            // for any already-configured user; if the runtime cache was wiped, the next IDE startup
-            // re-bootstraps and applies the saved key, so a failure here is non-fatal.
+            settings.state.configured = true
+            // Rewrite the config so POSTMAN_API_KEY and the telemetry opt-in reflect the current
+            // choices. cachedPaths() is present for any already-configured user; if the runtime
+            // cache was wiped, the next IDE startup re-bootstraps and applies these, so a failure
+            // here is non-fatal.
             service.applyConfig()
         }
     }
 
     override fun reset() {
         apiKeyField.text = service.getApiKey()
+        telemetryCheckBox.isSelected = settings.state.telemetryEnabled
     }
 
     override fun getPreferredFocusedComponent(): JComponent = apiKeyField

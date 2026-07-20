@@ -186,6 +186,11 @@ internal object BundledRuntime {
             "install",
             "--no-audit",
             "--no-fund",
+            // The published package ships a `preinstall: npx only-allow pnpm` contributor guard.
+            // We install a prebuilt package (dist/) that needs no lifecycle scripts, and a
+            // GUI-launched IDE has a minimal PATH without `npx`, so that script fails with exit 127.
+            // Skipping scripts avoids it and is also safer (no arbitrary install-time execution).
+            "--ignore-scripts",
             "--loglevel=error",
             "--prefix", workdir.absolutePath,
             spec,

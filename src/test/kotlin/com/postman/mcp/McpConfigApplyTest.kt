@@ -78,6 +78,61 @@ class McpConfigApplyTest {
         }
     }
 
+    // ── Telemetry opt-in (PSTAPI-1507) ──────────────────────────────────────────
+
+    @Test
+    fun `telemetry is omitted by default (opt-out)`() {
+        McpConfigWriter.applyConfig("key").getOrThrow()
+
+        assert(!configFile.readText().contains("POSTMAN_MCP_TELEMETRY")) {
+            "Expected no telemetry var when not consented"
+        }
+    }
+
+    @Test
+    fun `opting in injects the telemetry env var set to true`() {
+        McpConfigWriter.applyConfig("key", telemetryEnabled = true).getOrThrow()
+
+        val json = configFile.readText()
+        assertContains(json, "POSTMAN_MCP_TELEMETRY")
+        assertContains(json, "true")
+    }
+
+    @Test
+    fun `opting in still injects telemetry when the api key is blank`() {
+        McpConfigWriter.applyConfig("", telemetryEnabled = true).getOrThrow()
+
+        val json = configFile.readText()
+        assertContains(json, "POSTMAN_MCP_TELEMETRY")
+        assert(!json.contains("POSTMAN_API_KEY")) { "Expected no api key when blank: $json" }
+    }
+
+    @Test
+    fun `opting out strips a telemetry var written by a prior opt-in`() {
+        McpConfigWriter.applyConfig("key", telemetryEnabled = true).getOrThrow()
+        assertContains(configFile.readText(), "POSTMAN_MCP_TELEMETRY")
+
+        McpConfigWriter.applyConfig("key", telemetryEnabled = false).getOrThrow()
+
+        assert(!configFile.readText().contains("POSTMAN_MCP_TELEMETRY")) {
+            "Expected telemetry var removed after opting out"
+        }
+    }
+
+    @Test
+    fun `opting in preserves user-added env vars`() {
+        configFile.parentFile?.mkdirs()
+        configFile.writeText(
+            """{"mcpServers":{"postman":{"command":"${FAKE_NODE.absolutePath}","args":["${FAKE_SERVER.absolutePath}"],"env":{"POSTMAN_API_KEY":"k","POSTMAN_API_BASE_URL":"https://api.eu.postman.com"}}}}"""
+        )
+
+        McpConfigWriter.applyConfig("k", telemetryEnabled = true).getOrThrow()
+
+        val json = configFile.readText()
+        assertContains(json, "POSTMAN_MCP_TELEMETRY")
+        assertContains(json, "POSTMAN_API_BASE_URL")
+    }
+
     // ── Config structure ──────────────────────────────────────────────────────
 
     @Test

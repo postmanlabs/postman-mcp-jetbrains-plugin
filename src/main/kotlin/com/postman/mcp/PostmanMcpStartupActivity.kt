@@ -9,6 +9,7 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.startup.StartupActivity
 
 class PostmanMcpStartupActivity(
@@ -86,6 +87,9 @@ internal fun showSetupDialog(project: Project) {
     val settings = PostmanMcpSettings.getInstance()
     val service = PostmanMcpService.getInstance()
     PostmanMcpQuickSetupDialog(project) { apiKey ->
+        // Once a valid key is entered, ask for explicit telemetry consent (Accept/Decline) before
+        // writing anything. Persist it first so runSetupInModal's applyConfig picks it up.
+        settings.state.telemetryEnabled = askTelemetryConsent(project)
         val result = runSetupInModal(project, apiKey)
         if (result.isSuccess) {
             service.setApiKey(apiKey)
@@ -95,6 +99,22 @@ internal fun showSetupDialog(project: Project) {
         result
     }.show()
 }
+
+/**
+ * Opt-in telemetry consent (PSTAPI-1507). Shown as a blocking Accept/Decline dialog after the
+ * user enters their API key. Accept → telemetry enabled; Decline (or close) → disabled.
+ */
+internal fun askTelemetryConsent(project: Project): Boolean =
+    Messages.showYesNoDialog(
+        project,
+        "Enable telemetry to help Postman improve the product and provide better support.\n\n" +
+            "This is optional and stays off unless you accept. You can change it any time in " +
+            "Settings → Tools → Postman MCP Server.",
+        "Postman MCP Server Telemetry",
+        "Accept",
+        "Decline",
+        Messages.getQuestionIcon(),
+    ) == Messages.YES
 
 private fun runSetupInModal(project: Project, apiKey: String): Result<Unit> {
     var result: Result<Unit> = Result.failure(IllegalStateException("setup did not start"))
